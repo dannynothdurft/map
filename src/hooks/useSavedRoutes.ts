@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import type { SavedRoute } from "@/types/savedRoute";
+import type { RouteStopRef } from "@/lib/routeStop";
 
 interface SaveRouteError {
   error: string;
@@ -23,11 +24,11 @@ export function useSavedRoutes() {
     refresh().finally(() => setIsLoaded(true));
   }, [refresh]);
 
-  const saveRoute = useCallback(async (name: string, stopIds: string[]) => {
+  const saveRoute = useCallback(async (name: string, stops: RouteStopRef[]) => {
     const response = await fetch("/api/routes", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, stopIds }),
+      body: JSON.stringify({ name, stops }),
     });
     const data: SavedRoute | SaveRouteError = await response.json();
 

@@ -1,6 +1,8 @@
+import type { RouteStopRef } from "@/lib/routeStop";
+
 export interface SavedRoute {
   id: string;
   name: string;
-  stopIds: string[];
+  stops: RouteStopRef[];
   createdAt: number;
 }

@@ -11,18 +11,13 @@ import AddressBook from "@/components/AddressBook/AddressBook";
 import RouteList from "@/components/RouteList/RouteList";
 import SavedRoutesList from "@/components/SavedRoutesList/SavedRoutesList";
 import { createDepotStop, DEPOT_END_ID, DEPOT_START_ID } from "@/lib/depot";
+import { resolveRouteStop, type RouteStopRef } from "@/lib/routeStop";
 import type { DeliveryLocation } from "@/types/location";
 import styles from "./page.module.scss";
 
 const MapView = dynamic(() => import("@/components/MapView/MapView"), {
   ssr: false,
 });
-
-const PANEL_TITLES: Record<PanelKey, string> = {
-  tour: "Tour",
-  adressbuch: "Adressbuch",
-  routen: "Gespeicherte Routen",
-};
 
 export default function Home() {
   const {
@@ -33,9 +28,10 @@ export default function Home() {
     updateAddress,
   } = useAddressBook();
   const {
-    stopIds,
+    stops,
     isLoaded: routeLoaded,
     addStop,
+    addAdHocStop,
     removeStop,
     moveStop,
     clearStops,
@@ -51,9 +47,13 @@ export default function Home() {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [savedMessage, setSavedMessage] = useState<string | null>(null);
 
-  const selectedStops = stopIds
-    .map((id) => addresses.find((address) => address.id === id))
-    .filter((address): address is DeliveryLocation => Boolean(address));
+  const selectedStops = stops
+    .map((ref) => resolveRouteStop(ref, addresses))
+    .filter((location): location is DeliveryLocation => Boolean(location));
+
+  // Only plain address-book references count for the "in route" toggle in
+  // the address book - ad-hoc stops aren't address-book entries at all.
+  const routeAddressIds = stops.filter((ref): ref is string => typeof ref === "string");
 
   // Every route starts and ends at the fixed pharmacy depot.
   const mapLocations =
@@ -76,19 +76,28 @@ export default function Home() {
     setFocusedLocation((current) => (current?.id === id ? null : current));
   }
 
-  function handleLoadRoute(ids: string[]) {
-    setStops(ids);
+  function handleAddAdHocStop(location: DeliveryLocation) {
+    addAdHocStop({
+      label: location.label,
+      address: location.address,
+      lat: location.lat,
+      lng: location.lng,
+    });
+  }
+
+  function handleLoadRoute(loadedStops: RouteStopRef[]) {
+    setStops(loadedStops);
     setActivePanel("tour");
   }
 
   async function handleSaveRoute(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const trimmedName = routeName.trim();
-    if (!trimmedName || stopIds.length === 0) return;
+    if (!trimmedName || stops.length === 0) return;
 
     setSaveError(null);
     try {
-      await saveRoute(trimmedName, stopIds);
+      await saveRoute(trimmedName, stops);
       setSavedMessage(`Route "${trimmedName}" gespeichert.`);
       setRouteName("");
     } catch (err) {
@@ -103,7 +112,6 @@ export default function Home() {
         onPanelChange={handlePanelChange}
         isOpen={isSidebarOpen}
         onToggleOpen={() => setIsSidebarOpen((open) => !open)}
-        panelTitle={PANEL_TITLES[activePanel]}
       >
         {activePanel === "tour" && (
           <>
@@ -115,6 +123,8 @@ export default function Home() {
               onClear={clearStops}
               onSelect={setFocusedLocation}
             />
+
+            <AddressForm onSave={handleAddAdHocStop} submitLabel="Extra-Stopp hinzufügen" />
 
             {selectedStops.length > 0 && (
               <form className={styles.saveForm} onSubmit={handleSaveRoute}>
@@ -142,7 +152,7 @@ export default function Home() {
             <AddressForm onSave={addAddress} />
             <AddressBook
               addresses={addresses}
-              routeStopIds={stopIds}
+              routeStopIds={routeAddressIds}
               selectedId={focusedLocation?.id}
               onAddToRoute={addStop}
               onRemoveFromRoute={removeStop}

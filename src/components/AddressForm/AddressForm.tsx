@@ -7,9 +7,10 @@ import styles from "./AddressForm.module.scss";
 
 interface AddressFormProps {
   onSave: (location: DeliveryLocation) => void;
+  submitLabel?: string;
 }
 
-export default function AddressForm({ onSave }: AddressFormProps) {
+export default function AddressForm({ onSave, submitLabel = "Adresse speichern" }: AddressFormProps) {
   const [address, setAddress] = useState("");
   const [label, setLabel] = useState("");
   const { geocode, isLoading, error } = useGeocode();
@@ -65,7 +66,7 @@ export default function AddressForm({ onSave }: AddressFormProps) {
       </label>
 
       <button type="submit" className={styles.submit} disabled={isLoading}>
-        {isLoading ? "Suche…" : "Adresse speichern"}
+        {isLoading ? "Suche…" : submitLabel}
       </button>
 
       {error && <p className={styles.error}>{error}</p>}

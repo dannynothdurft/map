@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/mongodb";
+import type { RouteStopRef } from "@/lib/routeStop";
 
 interface RouteStateDocument {
   _id: string;
-  stopIds: string[];
+  stops: RouteStopRef[];
 }
 
 const CURRENT_ROUTE_ID = "current";
@@ -14,21 +15,21 @@ export async function GET() {
     .collection<RouteStateDocument>("routeState")
     .findOne({ _id: CURRENT_ROUTE_ID });
 
-  return NextResponse.json({ stopIds: doc?.stopIds ?? [] });
+  return NextResponse.json({ stops: doc?.stops ?? [] });
 }
 
 export async function PUT(request: NextRequest) {
   const body = await request.json();
-  const stopIds = Array.isArray(body?.stopIds) ? (body.stopIds as string[]) : [];
+  const stops = Array.isArray(body?.stops) ? (body.stops as RouteStopRef[]) : [];
 
   const db = await getDb();
   await db
     .collection<RouteStateDocument>("routeState")
     .updateOne(
       { _id: CURRENT_ROUTE_ID },
-      { $set: { stopIds } },
+      { $set: { stops } },
       { upsert: true },
     );
 
-  return NextResponse.json({ stopIds });
+  return NextResponse.json({ stops });
 }

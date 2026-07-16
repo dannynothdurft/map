@@ -2,12 +2,13 @@
 
 import type { DeliveryLocation } from "@/types/location";
 import type { SavedRoute } from "@/types/savedRoute";
+import { resolveRouteStop, type RouteStopRef } from "@/lib/routeStop";
 import styles from "./SavedRoutesList.module.scss";
 
 interface SavedRoutesListProps {
   routes: SavedRoute[];
   addresses: DeliveryLocation[];
-  onLoad: (stopIds: string[]) => void;
+  onLoad: (stops: RouteStopRef[]) => void;
   onDelete: (id: string) => void;
 }
 
@@ -17,13 +18,13 @@ export default function SavedRoutesList({
   onLoad,
   onDelete,
 }: SavedRoutesListProps) {
-  function describeStops(stopIds: string[]): string {
-    const labels = stopIds
-      .map((id) => addresses.find((address) => address.id === id))
-      .filter((address): address is DeliveryLocation => Boolean(address))
-      .map((address) => address.label || address.address);
+  function describeStops(stops: RouteStopRef[]): string {
+    const labels = stops
+      .map((ref) => resolveRouteStop(ref, addresses))
+      .filter((location): location is DeliveryLocation => Boolean(location))
+      .map((location) => location.label || location.address);
 
-    return labels.length > 0 ? labels.join(" → ") : `${stopIds.length} Stopp(s)`;
+    return labels.length > 0 ? labels.join(" → ") : `${stops.length} Stopp(s)`;
   }
 
   if (routes.length === 0) {
@@ -41,14 +42,14 @@ export default function SavedRoutesList({
         <li key={route.id} className={styles.item}>
           <div className={styles.details}>
             <span className={styles.name}>{route.name}</span>
-            <span className={styles.stops}>{describeStops(route.stopIds)}</span>
+            <span className={styles.stops}>{describeStops(route.stops)}</span>
           </div>
 
           <div className={styles.actions}>
             <button
               type="button"
               className={styles.loadButton}
-              onClick={() => onLoad(route.stopIds)}
+              onClick={() => onLoad(route.stops)}
             >
               Laden
             </button>
