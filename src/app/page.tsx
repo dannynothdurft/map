@@ -66,7 +66,8 @@ export default function Home() {
   function handlePanelChange(panel: PanelKey) {
     setActivePanel(panel);
     setIsSidebarOpen(true);
-    if (panel !== "adressbuch") setFocusedLocation(null);
+    // "Routen" has no per-stop focus action, so there's nothing to keep highlighted there.
+    if (panel === "routen") setFocusedLocation(null);
   }
 
   function handleDeleteAddress(id: string) {
@@ -108,9 +109,11 @@ export default function Home() {
           <>
             <RouteList
               locations={selectedStops}
+              selectedId={focusedLocation?.id}
               onRemove={removeStop}
               onMove={moveStop}
               onClear={clearStops}
+              onSelect={setFocusedLocation}
             />
 
             {selectedStops.length > 0 && (

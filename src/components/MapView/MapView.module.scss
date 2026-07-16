@@ -42,3 +42,21 @@
 .focusIcon {
   filter: hue-rotate(75deg) saturate(1.8) brightness(0.95);
 }
+
+.navigationLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: 0.5rem;
+  padding: 0.35rem 0.65rem;
+  border-radius: var(--radius-sm, 8px);
+  background: var(--accent, #2563eb);
+  color: #ffffff;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-decoration: none;
+
+  &:hover {
+    opacity: 0.9;
+  }
+}

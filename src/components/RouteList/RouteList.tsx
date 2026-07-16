@@ -5,16 +5,20 @@ import styles from "./RouteList.module.scss";
 
 interface RouteListProps {
   locations: DeliveryLocation[];
+  selectedId?: string | null;
   onRemove: (id: string) => void;
   onMove: (index: number, direction: -1 | 1) => void;
   onClear: () => void;
+  onSelect: (location: DeliveryLocation) => void;
 }
 
 export default function RouteList({
   locations,
+  selectedId,
   onRemove,
   onMove,
   onClear,
+  onSelect,
 }: RouteListProps) {
   if (locations.length === 0) {
     return (
@@ -35,7 +39,10 @@ export default function RouteList({
 
       <ol className={styles.list}>
         {locations.map((location, index) => (
-          <li key={location.id} className={styles.item}>
+          <li
+            key={location.id}
+            className={`${styles.item} ${selectedId === location.id ? styles.itemSelected : ""}`}
+          >
             <span className={styles.badge}>{index + 1}</span>
 
             <div className={styles.details}>
@@ -46,6 +53,13 @@ export default function RouteList({
             </div>
 
             <div className={styles.actions}>
+              <button
+                type="button"
+                title="Auf Karte zeigen"
+                onClick={() => onSelect(location)}
+              >
+                📍
+              </button>
               <button
                 type="button"
                 title="Nach oben"

@@ -13,6 +13,7 @@ import L from "leaflet";
 import type { DeliveryLocation } from "@/types/location";
 import { useRoute } from "@/hooks/useRoute";
 import { DEPOT_END_ID, DEPOT_START_ID } from "@/lib/depot";
+import { buildNavigationUrl } from "@/lib/navigation";
 import styles from "./MapView.module.scss";
 
 // Leaflet's default marker icons reference image paths that don't resolve
@@ -90,6 +91,19 @@ function FlyToFocus({ position }: { position: [number, number] }) {
   return null;
 }
 
+function NavigationLink({ lat, lng }: { lat: number; lng: number }) {
+  return (
+    <a
+      href={buildNavigationUrl(lat, lng)}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={styles.navigationLink}
+    >
+      🧭 Navigation starten
+    </a>
+  );
+}
+
 interface MapViewProps {
   locations: DeliveryLocation[];
   focusLocation?: DeliveryLocation | null;
@@ -162,6 +176,7 @@ export default function MapView({ locations, focusLocation }: MapViewProps) {
                   <strong>{title}</strong>
                   <br />
                   {location.address}
+                  <NavigationLink lat={location.lat} lng={location.lng} />
                 </Popup>
               </Marker>
             );
@@ -179,6 +194,7 @@ export default function MapView({ locations, focusLocation }: MapViewProps) {
                 <strong>{focusLocation.label || "Adresse"}</strong>
                 <br />
                 {focusLocation.address}
+                <NavigationLink lat={focusLocation.lat} lng={focusLocation.lng} />
               </Popup>
             </Marker>
           </>
