@@ -1,0 +1,213 @@
+.empty {
+  padding: 1.1rem;
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--panel-border);
+  color: var(--foreground-muted);
+  font-size: 0.85rem;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: var(--radius-md);
+  background: var(--panel-background);
+  border: 1px solid var(--panel-border);
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+
+  &:hover {
+    box-shadow: var(--shadow-sm);
+  }
+}
+
+.itemSelected {
+  border-color: var(--focus-accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--focus-accent) 25%, transparent);
+}
+
+.details {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.label {
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.address {
+  font-size: 0.78rem;
+  color: var(--foreground-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+.locateButton,
+.editButton {
+  width: 1.9rem;
+  height: 1.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-sm);
+  background: var(--background);
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: background 0.15s ease, transform 0.15s ease;
+
+  &:hover {
+    background: var(--panel-border);
+  }
+
+  &:active {
+    transform: scale(0.94);
+  }
+}
+
+.addButton,
+.inRouteButton {
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-sm);
+  padding: 0.35rem 0.55rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity 0.15s ease, background 0.15s ease, transform 0.15s ease;
+
+  &:active {
+    transform: scale(0.96);
+  }
+}
+
+.addButton {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #ffffff;
+
+  &:hover {
+    opacity: 0.9;
+  }
+}
+
+.inRouteButton {
+  background: var(--accent-soft);
+  border-color: transparent;
+  color: var(--accent);
+
+  &:hover {
+    background: var(--panel-border);
+  }
+}
+
+.deleteButton {
+  width: 1.9rem;
+  height: 1.9rem;
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-sm);
+  background: var(--background);
+  color: var(--error);
+  cursor: pointer;
+  font-size: 0.8rem;
+  line-height: 1;
+  flex-shrink: 0;
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: var(--panel-border);
+  }
+}
+
+.editItem {
+  border-radius: var(--radius-md);
+  background: var(--panel-background);
+  border: 1px solid var(--focus-accent);
+  padding: 0.75rem;
+}
+
+.editForm {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  input {
+    font-size: 0.85rem;
+    padding: 0.45rem 0.6rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--panel-border);
+    background: var(--background);
+    color: var(--foreground);
+
+    &:focus {
+      outline: none;
+      border-color: var(--focus-accent);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus-accent) 20%, transparent);
+    }
+  }
+}
+
+.editActions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.saveButton {
+  flex: 1;
+  padding: 0.4rem 0.6rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--focus-accent);
+  color: #ffffff;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    opacity: 0.9;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+}
+
+.cancelButton {
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-sm);
+  background: var(--background);
+  color: var(--foreground-muted);
+  font-size: 0.8rem;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: var(--panel-border);
+  }
+}
+
+.error {
+  color: var(--error);
+  font-size: 0.78rem;
+}

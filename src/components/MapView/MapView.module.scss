@@ -1,0 +1,44 @@
+.wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.map {
+  width: 100%;
+  height: 100%;
+  min-height: 300px;
+  // Neutral fallback so a slow/blocked tile load reads as "loading", not a
+  // black void, regardless of the page's light/dark background.
+  background: #ddd;
+}
+
+.routeInfo {
+  position: absolute;
+  top: 0.85rem;
+  right: 0.85rem;
+  z-index: 1000;
+  padding: 0.5rem 0.9rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(6px);
+  color: #171717;
+  font-size: 0.85rem;
+  font-weight: 600;
+  box-shadow: var(--shadow-md);
+}
+
+.routeError {
+  color: #b45309;
+  font-weight: 500;
+}
+
+// Recolor the default blue marker pin for the fixed depot (start & end).
+.depotIcon {
+  filter: hue-rotate(-80deg) saturate(1.3);
+}
+
+// Recolor the default blue marker pin for an ad-hoc focused/selected address.
+.focusIcon {
+  filter: hue-rotate(75deg) saturate(1.8) brightness(0.95);
+}
