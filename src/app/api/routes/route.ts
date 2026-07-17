@@ -6,7 +6,9 @@ import type { RouteStopRef } from "@/lib/routeStop";
 
 interface RouteDocument {
   name: string;
-  stops: RouteStopRef[];
+  stops?: RouteStopRef[];
+  /** @deprecated legacy field name from before stops replaced stopIds - kept for reading old documents */
+  stopIds?: string[];
   createdAt: number;
 }
 
@@ -14,7 +16,7 @@ function toSavedRoute(doc: WithId<RouteDocument>): SavedRoute {
   return {
     id: doc._id.toString(),
     name: doc.name,
-    stops: doc.stops,
+    stops: doc.stops ?? doc.stopIds ?? [],
     createdAt: doc.createdAt,
   };
 }

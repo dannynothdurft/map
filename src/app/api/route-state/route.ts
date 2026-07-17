@@ -4,7 +4,9 @@ import type { RouteStopRef } from "@/lib/routeStop";
 
 interface RouteStateDocument {
   _id: string;
-  stops: RouteStopRef[];
+  stops?: RouteStopRef[];
+  /** @deprecated legacy field name from before stops replaced stopIds - kept for reading old documents */
+  stopIds?: string[];
 }
 
 const CURRENT_ROUTE_ID = "current";
@@ -15,7 +17,7 @@ export async function GET() {
     .collection<RouteStateDocument>("routeState")
     .findOne({ _id: CURRENT_ROUTE_ID });
 
-  return NextResponse.json({ stops: doc?.stops ?? [] });
+  return NextResponse.json({ stops: doc?.stops ?? doc?.stopIds ?? [] });
 }
 
 export async function PUT(request: NextRequest) {
