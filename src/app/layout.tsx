@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Lieferroute",
-  description: "Adressen verwalten und als Route auf der Karte anzeigen",
+  title: "APO MAP",
+  description: "AlphaPoint Apotheken Map",
 };
 
 export const viewport: Viewport = {
