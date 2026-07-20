@@ -34,6 +34,7 @@ export default function AddressBook({
   onUpdate,
 }: AddressBookProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
 
   if (addresses.length === 0) {
     return (
@@ -43,9 +44,29 @@ export default function AddressBook({
     );
   }
 
+  const normalizedQuery = query.trim().toLowerCase();
+  const filteredAddresses = normalizedQuery
+    ? addresses.filter((address) =>
+        `${address.label ?? ""} ${address.address}`.toLowerCase().includes(normalizedQuery),
+      )
+    : addresses;
+
   return (
-    <ul className={styles.list}>
-      {addresses.map((address) => {
+    <>
+      <input
+        type="search"
+        value={query}
+        onChange={(event) => setQuery(event.target.value)}
+        placeholder="Adresse suchen…"
+        className={styles.search}
+      />
+
+      {filteredAddresses.length === 0 && (
+        <div className={styles.empty}>Keine Treffer für &quot;{query}&quot;.</div>
+      )}
+
+      <ul className={styles.list}>
+      {filteredAddresses.map((address) => {
         if (editingId === address.id) {
           return (
             <AddressEditItem
@@ -54,6 +75,10 @@ export default function AddressBook({
               onCancel={() => setEditingId(null)}
               onSave={(fields) => {
                 onUpdate(address.id, fields);
+                setEditingId(null);
+              }}
+              onDelete={() => {
+                onDelete(address.id);
                 setEditingId(null);
               }}
             />
@@ -68,20 +93,17 @@ export default function AddressBook({
             key={address.id}
             className={`${styles.item} ${isSelected ? styles.itemSelected : ""}`}
           >
-            <div className={styles.details}>
+            <button
+              type="button"
+              className={styles.details}
+              title="Auf Karte zeigen"
+              onClick={() => onSelect(address)}
+            >
               {address.label && <span className={styles.label}>{address.label}</span>}
               <span className={styles.address}>{address.address}</span>
-            </div>
+            </button>
 
             <div className={styles.actions}>
-              <button
-                type="button"
-                className={styles.locateButton}
-                title="Auf Karte zeigen"
-                onClick={() => onSelect(address)}
-              >
-                📍
-              </button>
               <button
                 type="button"
                 className={styles.editButton}
@@ -98,21 +120,14 @@ export default function AddressBook({
                   inRoute ? onRemoveFromRoute(address.id) : onAddToRoute(address.id)
                 }
               >
-                {inRoute ? "✓ In Route" : "+ Route"}
-              </button>
-              <button
-                type="button"
-                className={styles.deleteButton}
-                title="Aus Adressbuch löschen"
-                onClick={() => onDelete(address.id)}
-              >
-                ✕
+                {inRoute ? "✓" : "+"}
               </button>
             </div>
           </li>
         );
       })}
-    </ul>
+      </ul>
+    </>
   );
 }
 
@@ -120,9 +135,10 @@ interface AddressEditItemProps {
   address: DeliveryLocation;
   onCancel: () => void;
   onSave: (fields: UpdateFields) => void;
+  onDelete: () => void;
 }
 
-function AddressEditItem({ address, onCancel, onSave }: AddressEditItemProps) {
+function AddressEditItem({ address, onCancel, onSave, onDelete }: AddressEditItemProps) {
   const [addressText, setAddressText] = useState(address.address);
   const [label, setLabel] = useState(address.label ?? "");
   const { geocode, isLoading, error } = useGeocode();
@@ -175,6 +191,14 @@ function AddressEditItem({ address, onCancel, onSave }: AddressEditItemProps) {
             disabled={isLoading}
           >
             Abbrechen
+          </button>
+          <button
+            type="button"
+            className={styles.deleteButton}
+            onClick={onDelete}
+            disabled={isLoading}
+          >
+            Löschen
           </button>
         </div>
         {error && <p className={styles.error}>{error}</p>}

@@ -4,10 +4,12 @@ import { useState, type FormEvent } from "react";
 import dynamic from "next/dynamic";
 import { useAddressBook } from "@/hooks/useAddressBook";
 import { useRoutePlan } from "@/hooks/useRoutePlan";
+import { useRouteOptimizer } from "@/hooks/useRouteOptimizer";
 import { useSavedRoutes } from "@/hooks/useSavedRoutes";
 import AppSidebar, { type PanelKey } from "@/components/AppSidebar/AppSidebar";
 import AddressForm from "@/components/AddressForm/AddressForm";
 import AddressBook from "@/components/AddressBook/AddressBook";
+import Modal from "@/components/Modal/Modal";
 import RouteList from "@/components/RouteList/RouteList";
 import SavedRoutesList from "@/components/SavedRoutesList/SavedRoutesList";
 import { createDepotStop, DEPOT_END_ID, DEPOT_START_ID } from "@/lib/depot";
@@ -33,16 +35,18 @@ export default function Home() {
     addStop,
     addAdHocStop,
     removeStop,
-    moveStop,
+    reorderStops,
     clearStops,
     setStops,
   } = useRoutePlan();
   const { routes, saveRoute, deleteRoute } = useSavedRoutes();
+  const { optimize, isOptimizing, error: optimizeError } = useRouteOptimizer();
 
   const [activePanel, setActivePanel] = useState<PanelKey>("tour");
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [focusedLocation, setFocusedLocation] = useState<DeliveryLocation | null>(null);
 
+  const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [routeName, setRouteName] = useState("");
   const [saveError, setSaveError] = useState<string | null>(null);
   const [savedMessage, setSavedMessage] = useState<string | null>(null);
@@ -90,6 +94,11 @@ export default function Home() {
     setActivePanel("tour");
   }
 
+  async function handleOptimizeRoute() {
+    const reordered = await optimize(stops, selectedStops);
+    if (reordered) setStops(reordered);
+  }
+
   async function handleSaveRoute(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const trimmedName = routeName.trim();
@@ -100,9 +109,15 @@ export default function Home() {
       await saveRoute(trimmedName, stops);
       setSavedMessage(`Route "${trimmedName}" gespeichert.`);
       setRouteName("");
+      setIsSaveModalOpen(false);
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : "Speichern fehlgeschlagen.");
     }
+  }
+
+  function closeSaveModal() {
+    setIsSaveModalOpen(false);
+    setSaveError(null);
   }
 
   return (
@@ -119,37 +134,68 @@ export default function Home() {
               locations={selectedStops}
               selectedId={focusedLocation?.id}
               onRemove={removeStop}
-              onMove={moveStop}
+              onReorder={reorderStops}
               onClear={clearStops}
+              onOptimize={handleOptimizeRoute}
+              isOptimizing={isOptimizing}
+              optimizeError={optimizeError}
               onSelect={setFocusedLocation}
             />
 
-            <AddressForm onSave={handleAddAdHocStop} submitLabel="Extra-Stopp hinzufügen" />
+            <AddressForm
+              onSave={handleAddAdHocStop}
+              triggerLabel="+ Extra-Stopp hinzufügen"
+              modalTitle="Extra-Stopp hinzufügen"
+            />
 
             {selectedStops.length > 0 && (
-              <form className={styles.saveForm} onSubmit={handleSaveRoute}>
-                <input
-                  type="text"
-                  value={routeName}
-                  onChange={(event) => {
-                    setRouteName(event.target.value);
-                    setSavedMessage(null);
-                  }}
-                  placeholder="Name für diese Route"
-                  required
-                />
-                <button type="submit">Route speichern</button>
-              </form>
+              <button
+                type="button"
+                className={styles.saveTrigger}
+                onClick={() => {
+                  setSavedMessage(null);
+                  setIsSaveModalOpen(true);
+                }}
+              >
+                Tour speichern
+              </button>
             )}
 
-            {saveError && <p className={styles.error}>{saveError}</p>}
             {savedMessage && <p className={styles.savedMessage}>{savedMessage}</p>}
+
+            {isSaveModalOpen && (
+              <Modal title="Tour speichern" onClose={closeSaveModal}>
+                <form className={styles.saveForm} onSubmit={handleSaveRoute}>
+                  <label className={styles.saveField}>
+                    <span>Name für diese Route</span>
+                    <input
+                      type="text"
+                      value={routeName}
+                      onChange={(event) => setRouteName(event.target.value)}
+                      placeholder="z. B. Tour Montag Vormittag"
+                      autoFocus
+                      required
+                    />
+                  </label>
+
+                  <button type="submit" className={styles.saveSubmit}>
+                    Speichern
+                  </button>
+
+                  {saveError && <p className={styles.error}>{saveError}</p>}
+                </form>
+              </Modal>
+            )}
           </>
         )}
 
         {activePanel === "adressbuch" && (
           <>
-            <AddressForm onSave={addAddress} />
+            <AddressForm
+              onSave={addAddress}
+              triggerLabel="+ Adresse hinzufügen"
+              modalTitle="Adresse hinzufügen"
+            />
             <AddressBook
               addresses={addresses}
               routeStopIds={routeAddressIds}

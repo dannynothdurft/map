@@ -1,21 +1,53 @@
+.trigger {
+  align-self: flex-start;
+  padding: 0.5rem 0.85rem;
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-sm);
+  background: var(--panel-background);
+  color: var(--accent);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.15s ease;
+
+  &:hover {
+    background: var(--accent-soft);
+  }
+
+  &:active {
+    transform: scale(0.97);
+  }
+}
+
 .form {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  padding: 1.1rem;
-  border-radius: var(--radius-md);
-  background: var(--panel-background);
-  border: 1px solid var(--panel-border);
+  gap: 0.85rem;
+}
+
+.row {
+  display: flex;
+  gap: 0.6rem;
+
+  .field {
+    flex: 1;
+  }
+
+  .grow {
+    flex: 2;
+  }
 }
 
 .field {
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
+  min-width: 0;
   font-size: 0.85rem;
   color: var(--foreground-muted);
 
   input {
+    min-width: 0;
     font-size: 0.95rem;
     padding: 0.55rem 0.7rem;
     border-radius: var(--radius-sm);

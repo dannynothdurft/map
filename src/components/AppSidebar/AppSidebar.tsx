@@ -15,9 +15,9 @@ interface PanelDef {
 }
 
 const PANELS: PanelDef[] = [
-  { key: "tour", label: "Tour", icon: "🧭" },
+  { key: "tour", label: "Tour", icon: "🚗" },
   { key: "adressbuch", label: "Adressbuch", icon: "📖" },
-  { key: "routen", label: "Routen", icon: "⭐" },
+  { key: "routen", label: "Routen", icon: "🏁" },
 ];
 
 interface AppSidebarProps {
@@ -37,52 +37,50 @@ export default function AppSidebar({
 }: AppSidebarProps) {
   return (
     <div className={styles.shell}>
-      {!isOpen && (
+      {/* Always-visible icon rail - switching panels also opens the drawer
+          via the existing onPanelChange handler in page.tsx. */}
+      <nav className={styles.rail}>
+        {PANELS.map((panel) => (
+          <button
+            key={panel.key}
+            type="button"
+            className={`${styles.railButton} ${
+              activePanel === panel.key ? styles.railButtonActive : ""
+            }`}
+            onClick={() => onPanelChange(panel.key)}
+            title={panel.label}
+            aria-label={panel.label}
+          >
+            <span aria-hidden="true">{panel.icon}</span>
+          </button>
+        ))}
+
         <button
           type="button"
-          className={styles.openHandle}
+          className={styles.railToggle}
           onClick={onToggleOpen}
-          aria-label="Menü öffnen"
-          title="Menü öffnen"
+          aria-expanded={isOpen}
+          aria-label={isOpen ? "Menü einklappen" : "Menü öffnen"}
+          title={isOpen ? "Einklappen" : "Menü öffnen"}
         >
-          ›
+          <span
+            className={`${styles.toggleIcon} ${isOpen ? styles.toggleIconOpen : ""}`}
+            aria-hidden="true"
+          >
+            ›
+          </span>
         </button>
-      )}
+      </nav>
 
       {isOpen && <div className={styles.backdrop} onClick={onToggleOpen} aria-hidden="true" />}
 
       <div className={`${styles.drawer} ${isOpen ? styles.drawerOpen : ""}`}>
-        <div className={styles.tabs}>
-          {PANELS.map((panel) => (
-            <button
-              key={panel.key}
-              type="button"
-              className={`${styles.tabButton} ${
-                activePanel === panel.key ? styles.tabButtonActive : ""
-              }`}
-              onClick={() => onPanelChange(panel.key)}
-            >
-              <span className={styles.tabIcon} aria-hidden="true">
-                {panel.icon}
-              </span>
-              <span className={styles.tabLabel}>{panel.label}</span>
-            </button>
-          ))}
-
-          <button
-            type="button"
-            className={styles.closeHandle}
-            onClick={onToggleOpen}
-            aria-label="Menü einklappen"
-            title="Einklappen"
-          >
-            ‹
-          </button>
-        </div>
-
         <div className={styles.drawerContent}>{children}</div>
 
-        <div className={styles.version}>v{APP_VERSION}</div>
+        <div className={styles.footer}>
+          <span className={styles.footerCredit}>Created by Danny Nothdurft</span>
+          <span className={styles.footerVersion}>v{APP_VERSION}</span>
+        </div>
       </div>
     </div>
   );

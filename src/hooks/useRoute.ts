@@ -3,15 +3,23 @@
 import { useEffect, useState } from "react";
 import type { DeliveryLocation } from "@/types/location";
 
+interface RouteLeg {
+  coordinates: [number, number][];
+}
+
+interface RouteLegResponse {
+  coordinates: [number, number][];
+}
+
 interface RouteApiResponse {
-  coordinates?: [number, number][];
+  legs?: RouteLegResponse[];
   distanceMeters?: number;
   durationSeconds?: number;
   error?: string;
 }
 
 interface RouteResult {
-  geometry: [number, number][] | null;
+  legs: RouteLeg[] | null;
   distanceKm: number | null;
   durationMin: number | null;
   isLoading: boolean;
@@ -19,7 +27,7 @@ interface RouteResult {
 }
 
 export function useRoute(locations: DeliveryLocation[]): RouteResult {
-  const [geometry, setGeometry] = useState<[number, number][] | null>(null);
+  const [legs, setLegs] = useState<RouteLeg[] | null>(null);
   const [distanceKm, setDistanceKm] = useState<number | null>(null);
   const [durationMin, setDurationMin] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -33,7 +41,7 @@ export function useRoute(locations: DeliveryLocation[]): RouteResult {
     if (locations.length < 2) {
       // Clear any previous route immediately once there's nothing to route between.
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      setGeometry(null);
+      setLegs(null);
       setDistanceKm(null);
       setDurationMin(null);
       setError(null);
@@ -54,22 +62,22 @@ export function useRoute(locations: DeliveryLocation[]): RouteResult {
     })
       .then((response) => response.json())
       .then((data: RouteApiResponse) => {
-        if (data.error || !data.coordinates) {
+        if (data.error || !data.legs) {
           setError(data.error ?? "Route konnte nicht berechnet werden.");
-          setGeometry(null);
+          setLegs(null);
           setDistanceKm(null);
           setDurationMin(null);
           return;
         }
 
-        setGeometry(data.coordinates);
+        setLegs(data.legs.map((leg) => ({ coordinates: leg.coordinates })));
         setDistanceKm((data.distanceMeters ?? 0) / 1000);
         setDurationMin((data.durationSeconds ?? 0) / 60);
       })
       .catch(() => {
         if (controller.signal.aborted) return;
         setError("Routing-Dienst nicht erreichbar.");
-        setGeometry(null);
+        setLegs(null);
         setDistanceKm(null);
         setDurationMin(null);
       })
@@ -81,5 +89,5 @@ export function useRoute(locations: DeliveryLocation[]): RouteResult {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- routeKey is the intentional dependency, not the locations array reference
   }, [routeKey]);
 
-  return { geometry, distanceKm, durationMin, isLoading, error };
+  return { legs, distanceKm, durationMin, isLoading, error };
 }

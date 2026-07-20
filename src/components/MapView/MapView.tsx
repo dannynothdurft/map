@@ -8,6 +8,7 @@ import {
   Popup,
   TileLayer,
   useMap,
+  ZoomControl,
 } from "react-leaflet";
 import L from "leaflet";
 import type { DeliveryLocation } from "@/types/location";
@@ -39,21 +40,32 @@ const focusIcon = L.icon({ ...baseIconOptions, className: styles.focusIcon });
 const DEFAULT_CENTER: [number, number] = [51.1657, 10.4515]; // Germany
 const DEFAULT_ZOOM = 6;
 
-function InvalidateSizeOnMount() {
+// Distinct color per leg (stop-to-stop segment), cycling if there are more
+// legs than colors.
+const LEG_COLORS = [
+  "#2563eb",
+  "#dc2626",
+  "#16a34a",
+  "#d97706",
+  "#7c3aed",
+  "#0891b2",
+  "#db2777",
+  "#65a30d",
+];
+
+function InvalidateSizeOnResize() {
   const map = useMap();
 
   useEffect(() => {
-    // The container can still be mid-layout (0 height) on the very first
-    // paint in some browsers, which makes Leaflet think there's nothing to
-    // render. Force a recalculation once the layout has settled.
-    const handleResize = () => map.invalidateSize();
-    const timer = window.setTimeout(handleResize, 0);
-    window.addEventListener("resize", handleResize);
+    // Covers the very first paint (container can still be mid-layout) as
+    // well as later size changes - e.g. the sidebar drawer expanding or
+    // collapsing - which resize this container without ever firing a
+    // window "resize" event.
+    const container = map.getContainer();
+    const observer = new ResizeObserver(() => map.invalidateSize());
+    observer.observe(container);
 
-    return () => {
-      window.clearTimeout(timer);
-      window.removeEventListener("resize", handleResize);
-    };
+    return () => observer.disconnect();
   }, [map]);
 
   return null;
@@ -115,12 +127,18 @@ export default function MapView({ locations, focusLocation }: MapViewProps) {
     location.lng,
   ]);
 
-  const { geometry, distanceKm, durationMin, isLoading, error } = useRoute(locations);
+  const { legs, distanceKm, durationMin, isLoading, error } = useRoute(locations);
 
-  // Prefer the real road route; fall back to a straight line between the
-  // stops while it's loading or if the routing service couldn't be reached.
-  const routePositions = geometry ?? positions;
-  const fitPositions = geometry && geometry.length > 0 ? geometry : positions;
+  const hasRealRoute = Boolean(legs && legs.length > 0);
+
+  // Prefer the real road route, one segment per leg; fall back to a
+  // straight line between each consecutive stop while it's loading or if
+  // the routing service couldn't be reached.
+  const segments: [number, number][][] = hasRealRoute
+    ? legs!.map((leg) => leg.coordinates)
+    : positions.slice(0, -1).map((position, index) => [position, positions[index + 1]]);
+
+  const fitPositions = hasRealRoute ? segments.flat() : positions;
 
   // Number only the real stops (1, 2, 3…), skipping the depot start/end.
   const numberedLocations = locations.reduce<
@@ -137,6 +155,7 @@ export default function MapView({ locations, focusLocation }: MapViewProps) {
       <MapContainer
         center={DEFAULT_CENTER}
         zoom={DEFAULT_ZOOM}
+        zoomControl={false}
         className={styles.map}
       >
         <TileLayer
@@ -144,20 +163,23 @@ export default function MapView({ locations, focusLocation }: MapViewProps) {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
-        <InvalidateSizeOnMount />
+        <ZoomControl position="bottomright" />
+
+        <InvalidateSizeOnResize />
 
         {fitPositions.length > 0 && <FitToLocations positions={fitPositions} />}
 
-        {routePositions.length > 1 && (
+        {segments.map((segment, index) => (
           <Polyline
-            positions={routePositions}
+            key={index}
+            positions={segment}
             pathOptions={
-              geometry
-                ? { color: "#2563eb", weight: 5 }
-                : { color: "#94a3b8", weight: 4, dashArray: "6 8" }
+              hasRealRoute
+                ? { color: LEG_COLORS[index % LEG_COLORS.length], weight: 5 }
+                : { color: LEG_COLORS[index % LEG_COLORS.length], weight: 4, dashArray: "6 8" }
             }
           />
-        )}
+        ))}
 
         {numberedLocations
           // The depot end point is identical to the start point, so it would

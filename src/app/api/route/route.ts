@@ -5,12 +5,22 @@ interface RoutePoint {
   lng: number;
 }
 
+interface OsrmStep {
+  geometry: { coordinates: [number, number][] };
+}
+
+interface OsrmLeg {
+  distance: number;
+  duration: number;
+  steps: OsrmStep[];
+}
+
 interface OsrmResponse {
   code: string;
   routes?: {
-    geometry: { coordinates: [number, number][] };
     distance: number;
     duration: number;
+    legs: OsrmLeg[];
   }[];
 }
 
@@ -26,7 +36,9 @@ export async function POST(request: NextRequest) {
   }
 
   const coordinates = points.map((point) => `${point.lng},${point.lat}`).join(";");
-  const url = `https://router.project-osrm.org/route/v1/driving/${coordinates}?overview=full&geometries=geojson`;
+  // steps=true gives per-leg step geometry, which lets us draw and color
+  // each leg (stop-to-stop) separately instead of one long combined line.
+  const url = `https://router.project-osrm.org/route/v1/driving/${coordinates}?overview=full&geometries=geojson&steps=true`;
 
   const response = await fetch(url);
 
@@ -48,9 +60,28 @@ export async function POST(request: NextRequest) {
 
   const [route] = data.routes;
 
+  const legs = route.legs.map((leg) => {
+    const coordinates: [number, number][] = [];
+
+    leg.steps.forEach((step, stepIndex) => {
+      // Consecutive steps share their boundary point - skip it on every
+      // step but the first to avoid a duplicate coordinate in the leg line.
+      const startIndex = stepIndex === 0 ? 0 : 1;
+      for (let i = startIndex; i < step.geometry.coordinates.length; i++) {
+        const [lng, lat] = step.geometry.coordinates[i];
+        coordinates.push([lat, lng]);
+      }
+    });
+
+    return {
+      coordinates,
+      distanceMeters: leg.distance,
+      durationSeconds: leg.duration,
+    };
+  });
+
   return NextResponse.json({
-    // OSRM returns [lng, lat]; Leaflet expects [lat, lng].
-    coordinates: route.geometry.coordinates.map(([lng, lat]) => [lat, lng]),
+    legs,
     distanceMeters: route.distance,
     durationSeconds: route.duration,
   });

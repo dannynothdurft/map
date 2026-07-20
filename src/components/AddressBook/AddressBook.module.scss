@@ -8,6 +8,23 @@
   line-height: 1.5;
 }
 
+.search {
+  width: 100%;
+  padding: 0.55rem 0.7rem;
+  margin-bottom: 0.6rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--panel-border);
+  background: var(--background);
+  color: var(--foreground);
+  font-size: 0.9rem;
+
+  &:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+}
+
 .list {
   list-style: none;
   display: flex;
@@ -40,6 +57,15 @@
   flex-direction: column;
   flex: 1;
   min-width: 0;
+  border: none;
+  background: transparent;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover .address {
+    color: var(--accent);
+  }
 }
 
 .label {
@@ -62,10 +88,12 @@
   flex-shrink: 0;
 }
 
-.locateButton,
-.editButton {
+.editButton,
+.addButton,
+.inRouteButton {
   width: 1.9rem;
   height: 1.9rem;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -74,7 +102,8 @@
   background: var(--background);
   cursor: pointer;
   font-size: 0.85rem;
-  transition: background 0.15s ease, transform 0.15s ease;
+  font-weight: 600;
+  transition: background 0.15s ease, transform 0.15s ease, opacity 0.15s ease;
 
   &:hover {
     background: var(--panel-border);
@@ -85,29 +114,15 @@
   }
 }
 
-.addButton,
-.inRouteButton {
-  border: 1px solid var(--panel-border);
-  border-radius: var(--radius-sm);
-  padding: 0.35rem 0.55rem;
-  font-size: 0.72rem;
-  font-weight: 600;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: opacity 0.15s ease, background 0.15s ease, transform 0.15s ease;
-
-  &:active {
-    transform: scale(0.96);
-  }
-}
-
 .addButton {
   background: var(--accent);
   border-color: var(--accent);
   color: #ffffff;
+  font-size: 1.05rem;
 
   &:hover {
-    opacity: 0.9;
+    background: var(--accent);
+    opacity: 0.85;
   }
 }
 
@@ -115,28 +130,6 @@
   background: var(--accent-soft);
   border-color: transparent;
   color: var(--accent);
-
-  &:hover {
-    background: var(--panel-border);
-  }
-}
-
-.deleteButton {
-  width: 1.9rem;
-  height: 1.9rem;
-  border: 1px solid var(--panel-border);
-  border-radius: var(--radius-sm);
-  background: var(--background);
-  color: var(--error);
-  cursor: pointer;
-  font-size: 0.8rem;
-  line-height: 1;
-  flex-shrink: 0;
-  transition: background 0.15s ease;
-
-  &:hover {
-    background: var(--panel-border);
-  }
 }
 
 .editItem {
@@ -204,6 +197,21 @@
 
   &:hover:not(:disabled) {
     background: var(--panel-border);
+  }
+}
+
+.deleteButton {
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--error);
+  border-radius: var(--radius-sm);
+  background: var(--background);
+  color: var(--error);
+  font-size: 0.8rem;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: var(--error);
+    color: #ffffff;
   }
 }
 

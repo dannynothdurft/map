@@ -10,41 +10,75 @@
   height: 100%;
 }
 
+// Pinned to the bottom of the Tour panel's flex column regardless of how
+// much content sits above it (RouteList, extra-stop form, etc.).
+.saveTrigger {
+  margin-top: auto;
+  padding: 0.65rem 1rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+
+  &:hover {
+    opacity: 0.9;
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
 .saveForm {
   display: flex;
-  gap: 0.5rem;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.saveField {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.85rem;
+  color: var(--foreground-muted);
 
   input {
-    flex: 1;
-    min-width: 0;
+    font-size: 0.95rem;
     padding: 0.55rem 0.7rem;
     border-radius: var(--radius-sm);
     border: 1px solid var(--panel-border);
     background: var(--background);
     color: var(--foreground);
-    font-size: 0.9rem;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+    &:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-soft);
+    }
+  }
+}
+
+.saveSubmit {
+  padding: 0.65rem 1rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: #ffffff;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+
+  &:hover {
+    opacity: 0.9;
   }
 
-  button {
-    flex-shrink: 0;
-    padding: 0.55rem 0.9rem;
-    border: none;
-    border-radius: var(--radius-sm);
-    background: var(--accent);
-    color: #ffffff;
-    font-weight: 600;
-    font-size: 0.85rem;
-    cursor: pointer;
-    white-space: nowrap;
-    transition: opacity 0.15s ease, transform 0.15s ease;
-
-    &:hover {
-      opacity: 0.9;
-    }
-
-    &:active {
-      transform: scale(0.97);
-    }
+  &:active {
+    transform: scale(0.98);
   }
 }
 

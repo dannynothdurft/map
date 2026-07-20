@@ -59,14 +59,22 @@ export function useRoutePlan() {
     [mutate],
   );
 
-  const moveStop = useCallback(
-    (index: number, direction: -1 | 1) =>
+  const reorderStops = useCallback(
+    (fromIndex: number, toIndex: number) =>
       mutate((prev) => {
-        const targetIndex = index + direction;
-        if (targetIndex < 0 || targetIndex >= prev.length) return prev;
+        if (
+          fromIndex === toIndex ||
+          fromIndex < 0 ||
+          fromIndex >= prev.length ||
+          toIndex < 0 ||
+          toIndex >= prev.length
+        ) {
+          return prev;
+        }
 
         const next = [...prev];
-        [next[index], next[targetIndex]] = [next[targetIndex], next[index]];
+        const [moved] = next.splice(fromIndex, 1);
+        next.splice(toIndex, 0, moved);
         return next;
       }),
     [mutate],
@@ -82,7 +90,7 @@ export function useRoutePlan() {
     addStop,
     addAdHocStop,
     removeStop,
-    moveStop,
+    reorderStops,
     clearStops,
     setStops: setAllStops,
   };
