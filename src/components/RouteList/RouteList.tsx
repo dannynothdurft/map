@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type DragEvent } from "react";
+import { useRef, useState, type DragEvent, type TouchEvent } from "react";
 import type { DeliveryLocation } from "@/types/location";
 import styles from "./RouteList.module.scss";
 
@@ -29,6 +29,10 @@ export default function RouteList({
 }: RouteListProps) {
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [touchOffsetY, setTouchOffsetY] = useState(0);
+  const itemRefs = useRef<(HTMLLIElement | null)[]>([]);
+  const touchStartY = useRef(0);
+  const originalRectsRef = useRef<(DOMRect | null)[]>([]);
 
   if (locations.length === 0) {
     return (
@@ -36,6 +40,32 @@ export default function RouteList({
         Noch keine Stopps in der Route. Füge Adressen aus dem Adressbuch hinzu.
       </div>
     );
+  }
+
+  function captureOriginalRects() {
+    originalRectsRef.current = itemRefs.current.map((el) => el?.getBoundingClientRect() ?? null);
+  }
+
+  function getStepHeight(): number {
+    const rects = originalRectsRef.current;
+    for (let i = 0; i < rects.length - 1; i++) {
+      if (rects[i] && rects[i + 1]) {
+        return rects[i + 1]!.top - rects[i]!.top;
+      }
+    }
+    return rects[0]?.height ?? 0;
+  }
+
+  function getShiftOffset(index: number): number {
+    if (draggedIndex === null || dragOverIndex === null || index === draggedIndex) return 0;
+    const step = getStepHeight();
+    if (draggedIndex < dragOverIndex && index > draggedIndex && index <= dragOverIndex) {
+      return -step;
+    }
+    if (draggedIndex > dragOverIndex && index >= dragOverIndex && index < draggedIndex) {
+      return step;
+    }
+    return 0;
   }
 
   function handleDragOver(event: DragEvent<HTMLLIElement>, index: number) {
@@ -49,6 +79,46 @@ export default function RouteList({
     }
     setDraggedIndex(null);
     setDragOverIndex(null);
+  }
+
+  function findIndexAtY(clientY: number, excludeIndex: number | null): number | null {
+    const rects = originalRectsRef.current;
+    for (let i = 0; i < rects.length; i++) {
+      if (i === excludeIndex) continue;
+      const rect = rects[i];
+      if (!rect) continue;
+      if (clientY >= rect.top && clientY <= rect.bottom) {
+        return i;
+      }
+    }
+    return null;
+  }
+
+  function handleTouchStart(event: TouchEvent<HTMLSpanElement>, index: number) {
+    captureOriginalRects();
+    setDraggedIndex(index);
+    touchStartY.current = event.touches[0].clientY;
+    setTouchOffsetY(0);
+  }
+
+  function handleTouchMove(event: TouchEvent<HTMLSpanElement>) {
+    if (draggedIndex === null) return;
+    const touch = event.touches[0];
+    setTouchOffsetY(touch.clientY - touchStartY.current);
+
+    const hoveredIndex = findIndexAtY(touch.clientY, draggedIndex);
+    if (hoveredIndex !== null && hoveredIndex !== dragOverIndex) {
+      setDragOverIndex(hoveredIndex);
+    }
+  }
+
+  function handleTouchEnd() {
+    if (draggedIndex !== null && dragOverIndex !== null && draggedIndex !== dragOverIndex) {
+      onReorder(draggedIndex, dragOverIndex);
+    }
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+    setTouchOffsetY(0);
   }
 
   function handleRemove(location: DeliveryLocation) {
@@ -84,19 +154,43 @@ export default function RouteList({
         {locations.map((location, index) => (
           <li
             key={location.id}
+            ref={(el) => {
+              itemRefs.current[index] = el;
+            }}
             draggable
-            onDragStart={() => setDraggedIndex(index)}
+            onDragStart={() => {
+              captureOriginalRects();
+              setDraggedIndex(index);
+            }}
             onDragOver={(event) => handleDragOver(event, index)}
             onDrop={() => handleDrop(index)}
             onDragEnd={() => {
               setDraggedIndex(null);
               setDragOverIndex(null);
             }}
+            style={
+              draggedIndex === index && touchOffsetY !== 0
+                ? { transform: `translateY(${touchOffsetY}px)`, transition: "none" }
+                : getShiftOffset(index) !== 0
+                  ? { transform: `translateY(${getShiftOffset(index)}px)` }
+                  : undefined
+            }
             className={`${styles.item} ${selectedId === location.id ? styles.itemSelected : ""} ${
-              draggedIndex === index ? styles.itemDragging : ""
-            } ${dragOverIndex === index && draggedIndex !== index ? styles.itemDragOver : ""}`}
+              draggedIndex === index
+                ? touchOffsetY !== 0
+                  ? styles.itemTouchDragging
+                  : styles.itemDragging
+                : ""
+            }`}
           >
-            <span className={styles.dragHandle} aria-hidden="true" title="Ziehen, um Reihenfolge zu ändern">
+            <span
+              className={styles.dragHandle}
+              aria-hidden="true"
+              title="Ziehen, um Reihenfolge zu ändern"
+              onTouchStart={(event) => handleTouchStart(event, index)}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+            >
               ⠿
             </span>
 

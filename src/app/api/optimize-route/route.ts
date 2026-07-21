@@ -33,10 +33,10 @@ export async function POST(request: NextRequest) {
   const stopIds = stops.map((stop) => stop.id);
 
   const message = await client.messages.create({
-    // Haiku is plenty for sorting a handful of stops by geography, and
-    // without extended thinking it's a fraction of Opus's cost per call.
-    model: "claude-haiku-4-5",
+    model: "claude-opus-4-8",
     max_tokens: 4096,
+    thinking: { type: "adaptive" },
+    output_config: { effort: "low" },
     system:
       "Du planst Lieferrouten. Du bekommst einen festen Start-/Zielpunkt (Depot) und eine Liste von Lieferstopps mit Koordinaten. Bestimme die Reihenfolge, in der die Stopps besucht werden sollten, um die gesamte Fahrstrecke ab dem Depot, durch alle Stopps und zurück zum Depot möglichst kurz zu halten. Rufe danach immer das Werkzeug set_stop_order mit der optimierten Reihenfolge auf - genau einmal pro Stopp-ID.",
     tools: [

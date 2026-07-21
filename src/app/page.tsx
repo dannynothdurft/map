@@ -34,6 +34,7 @@ export default function Home() {
     isLoaded: routeLoaded,
     addStop,
     addAdHocStop,
+    addStops,
     removeStop,
     reorderStops,
     clearStops,
@@ -89,8 +90,13 @@ export default function Home() {
     });
   }
 
-  function handleLoadRoute(loadedStops: RouteStopRef[]) {
+  function handleOpenRoute(loadedStops: RouteStopRef[]) {
     setStops(loadedStops);
+    setActivePanel("tour");
+  }
+
+  function handleAddRouteStops(newStops: RouteStopRef[]) {
+    addStops(newStops);
     setActivePanel("tour");
   }
 
@@ -186,6 +192,15 @@ export default function Home() {
                 </form>
               </Modal>
             )}
+
+            {isOptimizing && (
+              <Modal title="Tour wird optimiert" onClose={() => {}}>
+                <div className={styles.optimizingContent}>
+                  <span className={styles.spinner} aria-hidden="true" />
+                  <p>Die KI berechnet gerade die beste Reihenfolge deiner Stopps…</p>
+                </div>
+              </Modal>
+            )}
           </>
         )}
 
@@ -213,7 +228,8 @@ export default function Home() {
           <SavedRoutesList
             routes={routes}
             addresses={addresses}
-            onLoad={handleLoadRoute}
+            onOpen={handleOpenRoute}
+            onAdd={handleAddRouteStops}
             onDelete={deleteRoute}
           />
         )}

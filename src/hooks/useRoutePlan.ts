@@ -11,6 +11,12 @@ function persistStops(stops: RouteStopRef[]) {
   });
 }
 
+function generateId() {
+  return typeof crypto !== "undefined" && "randomUUID" in crypto
+    ? crypto.randomUUID()
+    : `adhoc-${Date.now()}-${Math.random()}`;
+}
+
 export function useRoutePlan() {
   const [stops, setStopsState] = useState<RouteStopRef[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -44,13 +50,33 @@ export function useRoutePlan() {
 
   const addAdHocStop = useCallback(
     (stop: { label?: string; address: string; lat: number; lng: number }) => {
-      const id =
-        typeof crypto !== "undefined" && "randomUUID" in crypto
-          ? crypto.randomUUID()
-          : `adhoc-${Date.now()}-${Math.random()}`;
-
-      mutate((prev) => [...prev, { id, isAdHoc: true, ...stop }]);
+      mutate((prev) => [...prev, { id: generateId(), isAdHoc: true, ...stop }]);
     },
+    [mutate],
+  );
+
+  // Merges another route's stops into the current plan instead of replacing
+  // it - used by "Tour hinzufügen" so multiple saved tours can be combined.
+  // Ad-hoc stops get a fresh id so adding the same saved tour twice (or two
+  // tours that share an ad-hoc stop) doesn't collide on React keys / dedupe.
+  const addStops = useCallback(
+    (refs: RouteStopRef[]) =>
+      mutate((prev) => {
+        const existingIds = new Set(prev.map((ref) => routeStopId(ref)));
+        const additions: RouteStopRef[] = [];
+
+        for (const ref of refs) {
+          if (typeof ref === "string") {
+            if (existingIds.has(ref)) continue;
+            existingIds.add(ref);
+            additions.push(ref);
+          } else {
+            additions.push({ ...ref, id: generateId() });
+          }
+        }
+
+        return [...prev, ...additions];
+      }),
     [mutate],
   );
 
@@ -89,6 +115,7 @@ export function useRoutePlan() {
     isLoaded,
     addStop,
     addAdHocStop,
+    addStops,
     removeStop,
     reorderStops,
     clearStops,

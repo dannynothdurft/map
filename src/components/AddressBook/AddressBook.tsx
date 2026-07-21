@@ -45,11 +45,17 @@ export default function AddressBook({
   }
 
   const normalizedQuery = query.trim().toLowerCase();
-  const filteredAddresses = normalizedQuery
-    ? addresses.filter((address) =>
-        `${address.label ?? ""} ${address.address}`.toLowerCase().includes(normalizedQuery),
-      )
-    : addresses;
+  const filteredAddresses = (
+    normalizedQuery
+      ? addresses.filter((address) =>
+          `${address.label ?? ""} ${address.address}`.toLowerCase().includes(normalizedQuery),
+        )
+      : addresses
+  )
+    .slice()
+    .sort((a, b) =>
+      (a.label || a.address).localeCompare(b.label || b.address, "de", { sensitivity: "base" }),
+    );
 
   return (
     <>
