@@ -65,10 +65,6 @@
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--focus-accent) 25%, transparent);
 }
 
-.itemDragging {
-  opacity: 0.4;
-}
-
 .itemTouchDragging {
   position: relative;
   z-index: 5;

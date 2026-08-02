@@ -37,12 +37,18 @@ export async function POST(request: NextRequest) {
   const stopIds = stops.map((stop) => stop.id);
 
   const message = await client.messages.create({
-    model: "claude-opus-4-8",
+    model: "claude-opus-5",
     max_tokens: 4096,
     thinking: { type: "adaptive" },
-    output_config: { effort: "low" },
+    output_config: { effort: "high" },
     system:
-      "Du planst Lieferrouten. Du bekommst einen festen Start-/Zielpunkt (Depot) und eine Liste von Lieferstopps mit Koordinaten. Bestimme die Reihenfolge, in der die Stopps besucht werden sollten, um die gesamte Fahrstrecke ab dem Depot, durch alle Stopps und zurück zum Depot möglichst kurz zu halten. Rufe danach immer das Werkzeug set_stop_order mit der optimierten Reihenfolge auf - genau einmal pro Stopp-ID.",
+      "Du bist Experte für Tourenplanung im Lieferverkehr. Du bekommst einen festen Start-/Zielpunkt (Depot) sowie eine Liste von Lieferstopps mit Adresse und Koordinaten (Breitengrad, Längengrad).\n\n" +
+      "Aufgabe: Bestimme die Besuchsreihenfolge der Stopps so, dass die gesamte Tour - vom Depot durch alle Stopps und zurück zum Depot - so kurz wie möglich ist.\n\n" +
+      "Vorgehen:\n" +
+      "- Schätze Distanzen anhand der Koordinaten ab und plane wie bei einem klassischen Rundreiseproblem (TSP): vermeide Zickzack-Fahrten und unnötige Umwege, fasse geografisch nahe Stopps zu zusammenhängenden Abschnitten der Route zusammen.\n" +
+      "- Denke die Route in Ruhe durch und vergleiche gedanklich mehrere Reihenfolgen, bevor du dich für die kürzeste entscheidest.\n" +
+      "- Jeder übergebene Stopp muss GENAU EINMAL in der Reihenfolge vorkommen - keine ausgelassenen, doppelten oder erfundenen IDs.\n\n" +
+      "Rufe abschließend immer das Werkzeug set_stop_order mit der optimierten Reihenfolge auf - genau einmal pro Stopp-ID.",
     tools: [
       {
         name: "set_stop_order",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, type DragEvent, type TouchEvent } from "react";
+import { useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import type { DeliveryLocation } from "@/types/location";
 import styles from "./RouteList.module.scss";
 
@@ -8,7 +8,7 @@ interface RouteListProps {
   locations: DeliveryLocation[];
   selectedId?: string | null;
   onRemove: (id: string) => void;
-  onReorder: (fromId: string, toId: string) => void;
+  onReorder: (fromIndex: number, toIndex: number) => void;
   onClear: () => void;
   onSelect: (location: DeliveryLocation) => void;
   onOptimize: () => void;
@@ -16,6 +16,13 @@ interface RouteListProps {
   optimizeError: string | null;
 }
 
+// Reordering is driven entirely by Pointer Events (one unified path for
+// mouse, touch and pen) instead of the native HTML5 Drag and Drop API.
+// Safari (desktop and iOS) is unreliable with native DnD once the draggable
+// element contains other interactive children like our buttons - it lets
+// the drag start and preview visually, but silently refuses to commit the
+// drop, snapping the row back with no error. Pointer Events + explicit
+// pointer capture sidestep that entirely and behave the same everywhere.
 export default function RouteList({
   locations,
   selectedId,
@@ -29,9 +36,9 @@ export default function RouteList({
 }: RouteListProps) {
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
-  const [touchOffsetY, setTouchOffsetY] = useState(0);
+  const [dragOffsetY, setDragOffsetY] = useState(0);
   const itemRefs = useRef<(HTMLLIElement | null)[]>([]);
-  const touchStartY = useRef(0);
+  const dragStartY = useRef(0);
   const originalRectsRef = useRef<(DOMRect | null)[]>([]);
 
   if (locations.length === 0) {
@@ -68,25 +75,6 @@ export default function RouteList({
     return 0;
   }
 
-  function handleDragOver(event: DragEvent<HTMLLIElement>, index: number) {
-    event.preventDefault();
-    if (index !== dragOverIndex) setDragOverIndex(index);
-  }
-
-  function handleDrop(index: number) {
-    // Resolve by id rather than passing the raw indices straight through -
-    // the rendered list here can momentarily drift out of sync with the
-    // underlying stops array (e.g. a re-render mid-drag), which would
-    // otherwise reorder the wrong item.
-    if (draggedIndex !== null && draggedIndex !== index) {
-      const fromId = locations[draggedIndex]?.id;
-      const toId = locations[index]?.id;
-      if (fromId && toId) onReorder(fromId, toId);
-    }
-    setDraggedIndex(null);
-    setDragOverIndex(null);
-  }
-
   function findIndexAtY(clientY: number, excludeIndex: number | null): number | null {
     const rects = originalRectsRef.current;
     for (let i = 0; i < rects.length; i++) {
@@ -100,33 +88,52 @@ export default function RouteList({
     return null;
   }
 
-  function handleTouchStart(event: TouchEvent<HTMLSpanElement>, index: number) {
-    captureOriginalRects();
-    setDraggedIndex(index);
-    touchStartY.current = event.touches[0].clientY;
-    setTouchOffsetY(0);
+  function endDrag(commit: boolean) {
+    if (commit && draggedIndex !== null && dragOverIndex !== null && draggedIndex !== dragOverIndex) {
+      onReorder(draggedIndex, dragOverIndex);
+    }
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+    setDragOffsetY(0);
   }
 
-  function handleTouchMove(event: TouchEvent<HTMLSpanElement>) {
-    if (draggedIndex === null) return;
-    const touch = event.touches[0];
-    setTouchOffsetY(touch.clientY - touchStartY.current);
+  function handlePointerDown(event: ReactPointerEvent<HTMLSpanElement>, index: number) {
+    event.preventDefault();
+    // Pointer capture keeps move/up events targeted at the handle even once
+    // the finger/cursor leaves it - no need to track the pointer globally.
+    event.currentTarget.setPointerCapture(event.pointerId);
+    captureOriginalRects();
+    setDraggedIndex(index);
+    setDragOverIndex(index);
+    dragStartY.current = event.clientY;
+    setDragOffsetY(0);
+  }
 
-    const hoveredIndex = findIndexAtY(touch.clientY, draggedIndex);
+  function handlePointerMove(event: ReactPointerEvent<HTMLSpanElement>) {
+    if (draggedIndex === null) return;
+    event.preventDefault();
+    setDragOffsetY(event.clientY - dragStartY.current);
+
+    const hoveredIndex = findIndexAtY(event.clientY, draggedIndex);
     if (hoveredIndex !== null && hoveredIndex !== dragOverIndex) {
       setDragOverIndex(hoveredIndex);
     }
   }
 
-  function handleTouchEnd() {
-    if (draggedIndex !== null && dragOverIndex !== null && draggedIndex !== dragOverIndex) {
-      const fromId = locations[draggedIndex]?.id;
-      const toId = locations[dragOverIndex]?.id;
-      if (fromId && toId) onReorder(fromId, toId);
+  function releaseCapture(event: ReactPointerEvent<HTMLSpanElement>) {
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
     }
-    setDraggedIndex(null);
-    setDragOverIndex(null);
-    setTouchOffsetY(0);
+  }
+
+  function handlePointerUp(event: ReactPointerEvent<HTMLSpanElement>) {
+    releaseCapture(event);
+    endDrag(true);
+  }
+
+  function handlePointerCancel(event: ReactPointerEvent<HTMLSpanElement>) {
+    releaseCapture(event);
+    endDrag(false);
   }
 
   function handleRemove(location: DeliveryLocation) {
@@ -165,39 +172,25 @@ export default function RouteList({
             ref={(el) => {
               itemRefs.current[index] = el;
             }}
-            draggable
-            onDragStart={() => {
-              captureOriginalRects();
-              setDraggedIndex(index);
-            }}
-            onDragOver={(event) => handleDragOver(event, index)}
-            onDrop={() => handleDrop(index)}
-            onDragEnd={() => {
-              setDraggedIndex(null);
-              setDragOverIndex(null);
-            }}
             style={
-              draggedIndex === index && touchOffsetY !== 0
-                ? { transform: `translateY(${touchOffsetY}px)`, transition: "none" }
+              draggedIndex === index && dragOffsetY !== 0
+                ? { transform: `translateY(${dragOffsetY}px)`, transition: "none" }
                 : getShiftOffset(index) !== 0
                   ? { transform: `translateY(${getShiftOffset(index)}px)` }
                   : undefined
             }
             className={`${styles.item} ${selectedId === location.id ? styles.itemSelected : ""} ${
-              draggedIndex === index
-                ? touchOffsetY !== 0
-                  ? styles.itemTouchDragging
-                  : styles.itemDragging
-                : ""
+              draggedIndex === index ? styles.itemTouchDragging : ""
             }`}
           >
             <span
               className={styles.dragHandle}
               aria-hidden="true"
               title="Ziehen, um Reihenfolge zu ändern"
-              onTouchStart={(event) => handleTouchStart(event, index)}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={handleTouchEnd}
+              onPointerDown={(event) => handlePointerDown(event, index)}
+              onPointerMove={handlePointerMove}
+              onPointerUp={handlePointerUp}
+              onPointerCancel={handlePointerCancel}
             >
               ⠿
             </span>
