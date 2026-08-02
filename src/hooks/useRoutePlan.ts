@@ -86,17 +86,11 @@ export function useRoutePlan() {
   );
 
   const reorderStops = useCallback(
-    (fromIndex: number, toIndex: number) =>
+    (fromId: string, toId: string) =>
       mutate((prev) => {
-        if (
-          fromIndex === toIndex ||
-          fromIndex < 0 ||
-          fromIndex >= prev.length ||
-          toIndex < 0 ||
-          toIndex >= prev.length
-        ) {
-          return prev;
-        }
+        const fromIndex = prev.findIndex((ref) => routeStopId(ref) === fromId);
+        const toIndex = prev.findIndex((ref) => routeStopId(ref) === toId);
+        if (fromIndex === -1 || toIndex === -1 || fromIndex === toIndex) return prev;
 
         const next = [...prev];
         const [moved] = next.splice(fromIndex, 1);

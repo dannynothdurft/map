@@ -8,7 +8,7 @@ interface RouteListProps {
   locations: DeliveryLocation[];
   selectedId?: string | null;
   onRemove: (id: string) => void;
-  onReorder: (fromIndex: number, toIndex: number) => void;
+  onReorder: (fromId: string, toId: string) => void;
   onClear: () => void;
   onSelect: (location: DeliveryLocation) => void;
   onOptimize: () => void;
@@ -74,8 +74,14 @@ export default function RouteList({
   }
 
   function handleDrop(index: number) {
+    // Resolve by id rather than passing the raw indices straight through -
+    // the rendered list here can momentarily drift out of sync with the
+    // underlying stops array (e.g. a re-render mid-drag), which would
+    // otherwise reorder the wrong item.
     if (draggedIndex !== null && draggedIndex !== index) {
-      onReorder(draggedIndex, index);
+      const fromId = locations[draggedIndex]?.id;
+      const toId = locations[index]?.id;
+      if (fromId && toId) onReorder(fromId, toId);
     }
     setDraggedIndex(null);
     setDragOverIndex(null);
@@ -114,7 +120,9 @@ export default function RouteList({
 
   function handleTouchEnd() {
     if (draggedIndex !== null && dragOverIndex !== null && draggedIndex !== dragOverIndex) {
-      onReorder(draggedIndex, dragOverIndex);
+      const fromId = locations[draggedIndex]?.id;
+      const toId = locations[dragOverIndex]?.id;
+      if (fromId && toId) onReorder(fromId, toId);
     }
     setDraggedIndex(null);
     setDragOverIndex(null);
