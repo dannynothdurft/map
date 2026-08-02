@@ -10,6 +10,11 @@ interface RouteStateDocument {
   stopIds?: string[];
 }
 
+// The in-progress tour is shared by the whole team (one pharmacy building
+// one tour together), so it's stored under a single fixed id rather than
+// per-user.
+const SHARED_ROUTE_STATE_ID = "current";
+
 export async function GET() {
   const user = await requireUser();
   if (!user) return NextResponse.json({ error: "Nicht angemeldet." }, { status: 401 });
@@ -17,7 +22,7 @@ export async function GET() {
   const db = await getDb();
   const doc = await db
     .collection<RouteStateDocument>("routeState")
-    .findOne({ _id: user.id });
+    .findOne({ _id: SHARED_ROUTE_STATE_ID });
 
   return NextResponse.json({ stops: doc?.stops ?? doc?.stopIds ?? [] });
 }
@@ -33,7 +38,7 @@ export async function PUT(request: NextRequest) {
   await db
     .collection<RouteStateDocument>("routeState")
     .updateOne(
-      { _id: user.id },
+      { _id: SHARED_ROUTE_STATE_ID },
       { $set: { stops } },
       { upsert: true },
     );

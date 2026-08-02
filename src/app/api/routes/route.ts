@@ -31,7 +31,7 @@ export async function GET() {
   const db = await getDb();
   const docs = await db
     .collection<RouteDocument>("routes")
-    .find({ "createdBy.id": user.id })
+    .find()
     .sort({ createdAt: -1 })
     .toArray();
 
