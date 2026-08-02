@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireUser } from "@/lib/session";
 
 interface NominatimResult {
   lat: string;
@@ -7,6 +8,9 @@ interface NominatimResult {
 }
 
 export async function GET(request: NextRequest) {
+  const user = await requireUser();
+  if (!user) return NextResponse.json({ error: "Nicht angemeldet." }, { status: 401 });
+
   const query = request.nextUrl.searchParams.get("q")?.trim();
 
   if (!query) {

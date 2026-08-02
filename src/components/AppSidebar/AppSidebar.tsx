@@ -6,7 +6,7 @@ import styles from "./AppSidebar.module.scss";
 
 const APP_VERSION = packageJson.version;
 
-export type PanelKey = "tour" | "adressbuch" | "routen";
+export type PanelKey = "tour" | "adressbuch" | "routen" | "team";
 
 interface PanelDef {
   key: PanelKey;
@@ -20,12 +20,17 @@ const PANELS: PanelDef[] = [
   { key: "routen", label: "Routen", icon: "🏁" },
 ];
 
+const ADMIN_PANEL: PanelDef = { key: "team", label: "Team", icon: "👥" };
+
 interface AppSidebarProps {
   activePanel: PanelKey;
   onPanelChange: (panel: PanelKey) => void;
   isOpen: boolean;
   onToggleOpen: () => void;
   children: ReactNode;
+  userName?: string;
+  isAdmin?: boolean;
+  onLogout?: () => void;
 }
 
 export default function AppSidebar({
@@ -34,13 +39,18 @@ export default function AppSidebar({
   isOpen,
   onToggleOpen,
   children,
+  userName,
+  isAdmin,
+  onLogout,
 }: AppSidebarProps) {
+  const panels = isAdmin ? [...PANELS, ADMIN_PANEL] : PANELS;
+
   return (
     <div className={styles.shell}>
       {/* Always-visible icon rail - switching panels also opens the drawer
           via the existing onPanelChange handler in page.tsx. */}
       <nav className={styles.rail}>
-        {PANELS.map((panel) => (
+        {panels.map((panel) => (
           <button
             key={panel.key}
             type="button"
@@ -78,6 +88,14 @@ export default function AppSidebar({
         <div className={styles.drawerContent}>{children}</div>
 
         <div className={styles.footer}>
+          {userName && (
+            <div className={styles.footerUser}>
+              <span className={styles.footerUserName}>Angemeldet als {userName}</span>
+              <button type="button" className={styles.footerLogout} onClick={onLogout}>
+                Abmelden
+              </button>
+            </div>
+          )}
           <span className={styles.footerCredit}>Created by Danny Nothdurft</span>
           <span className={styles.footerVersion}>v{APP_VERSION}</span>
         </div>

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
+import { requireUser } from "@/lib/session";
 
 const client = new Anthropic();
 
@@ -19,6 +20,9 @@ interface DepotInput {
 }
 
 export async function POST(request: NextRequest) {
+  const user = await requireUser();
+  if (!user) return NextResponse.json({ error: "Nicht angemeldet." }, { status: 401 });
+
   const body = await request.json();
   const depot: DepotInput | undefined = body?.depot;
   const stops: StopInput[] = Array.isArray(body?.stops) ? body.stops : [];

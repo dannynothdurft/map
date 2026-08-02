@@ -107,6 +107,9 @@ export default function AddressBook({
             >
               {address.label && <span className={styles.label}>{address.label}</span>}
               <span className={styles.address}>{address.address}</span>
+              {address.createdBy && (
+                <span className={styles.creator}>von {address.createdBy.name}</span>
+              )}
             </button>
 
             <div className={styles.actions}>

@@ -3,6 +3,7 @@ import type { WithId } from "mongodb";
 import { getDb } from "@/lib/mongodb";
 import type { SavedRoute } from "@/types/savedRoute";
 import type { RouteStopRef } from "@/lib/routeStop";
+import { requireUser } from "@/lib/session";
 
 interface RouteDocument {
   name: string;
@@ -10,6 +11,7 @@ interface RouteDocument {
   /** @deprecated legacy field name from before stops replaced stopIds - kept for reading old documents */
   stopIds?: string[];
   createdAt: number;
+  createdBy?: { id: string; name: string };
 }
 
 function toSavedRoute(doc: WithId<RouteDocument>): SavedRoute {
@@ -18,14 +20,18 @@ function toSavedRoute(doc: WithId<RouteDocument>): SavedRoute {
     name: doc.name,
     stops: doc.stops ?? doc.stopIds ?? [],
     createdAt: doc.createdAt,
+    createdBy: doc.createdBy,
   };
 }
 
 export async function GET() {
+  const user = await requireUser();
+  if (!user) return NextResponse.json({ error: "Nicht angemeldet." }, { status: 401 });
+
   const db = await getDb();
   const docs = await db
     .collection<RouteDocument>("routes")
-    .find()
+    .find({ "createdBy.id": user.id })
     .sort({ createdAt: -1 })
     .toArray();
 
@@ -33,6 +39,9 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  const user = await requireUser();
+  if (!user) return NextResponse.json({ error: "Nicht angemeldet." }, { status: 401 });
+
   const body = await request.json();
   const name = typeof body?.name === "string" ? body.name.trim() : "";
   const stops = Array.isArray(body?.stops) ? (body.stops as RouteStopRef[]) : [];
@@ -44,7 +53,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const doc: RouteDocument = { name, stops, createdAt: Date.now() };
+  const doc: RouteDocument = { name, stops, createdAt: Date.now(), createdBy: user };
 
   const db = await getDb();
   const result = await db.collection<RouteDocument>("routes").insertOne(doc);

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireUser } from "@/lib/session";
 
 interface RoutePoint {
   lat: number;
@@ -25,6 +26,9 @@ interface OsrmResponse {
 }
 
 export async function POST(request: NextRequest) {
+  const user = await requireUser();
+  if (!user) return NextResponse.json({ error: "Nicht angemeldet." }, { status: 401 });
+
   const body = await request.json();
   const points: RoutePoint[] = Array.isArray(body?.points) ? body.points : [];
 

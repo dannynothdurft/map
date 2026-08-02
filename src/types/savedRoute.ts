@@ -5,4 +5,5 @@ export interface SavedRoute {
   name: string;
   stops: RouteStopRef[];
   createdAt: number;
+  createdBy?: { id: string; name: string };
 }

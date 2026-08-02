@@ -51,6 +51,12 @@
   white-space: nowrap;
 }
 
+.creator {
+  font-size: 0.68rem;
+  color: var(--foreground-muted);
+  opacity: 0.75;
+}
+
 .actions {
   display: flex;
   align-items: center;

@@ -7,6 +7,7 @@ export interface AddressDocument {
   lat: number;
   lng: number;
   createdAt: number;
+  createdBy?: { id: string; name: string };
 }
 
 export function toAddress(doc: WithId<AddressDocument>): DeliveryLocation {
@@ -17,5 +18,6 @@ export function toAddress(doc: WithId<AddressDocument>): DeliveryLocation {
     lat: doc.lat,
     lng: doc.lng,
     createdAt: doc.createdAt,
+    createdBy: doc.createdBy,
   };
 }

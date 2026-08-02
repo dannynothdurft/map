@@ -144,6 +144,34 @@
   user-select: none;
 }
 
+.footerUser {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+}
+
+.footerUserName {
+  font-size: 0.75rem;
+  color: var(--foreground-muted);
+}
+
+.footerLogout {
+  padding: 0.2rem 0.5rem;
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-sm);
+  background: var(--background);
+  color: var(--accent);
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: var(--accent-soft);
+  }
+}
+
 .footerCredit {
   font-size: 0.72rem;
   font-weight: 600;

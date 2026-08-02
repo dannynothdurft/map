@@ -3,11 +3,15 @@ import { ObjectId } from "mongodb";
 import { getDb } from "@/lib/mongodb";
 import { toAddress, type AddressDocument } from "@/lib/addressDocument";
 import type { DeliveryLocation } from "@/types/location";
+import { requireUser } from "@/lib/session";
 
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const user = await requireUser();
+  if (!user) return NextResponse.json({ error: "Nicht angemeldet." }, { status: 401 });
+
   const { id } = await params;
 
   if (!ObjectId.isValid(id)) {
@@ -44,6 +48,9 @@ export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const user = await requireUser();
+  if (!user) return NextResponse.json({ error: "Nicht angemeldet." }, { status: 401 });
+
   const { id } = await params;
 
   if (!ObjectId.isValid(id)) {

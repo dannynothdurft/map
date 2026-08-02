@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 import dynamic from "next/dynamic";
 import { useAddressBook } from "@/hooks/useAddressBook";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useRoutePlan } from "@/hooks/useRoutePlan";
 import { useRouteOptimizer } from "@/hooks/useRouteOptimizer";
 import { useSavedRoutes } from "@/hooks/useSavedRoutes";
@@ -12,6 +13,7 @@ import AddressBook from "@/components/AddressBook/AddressBook";
 import Modal from "@/components/Modal/Modal";
 import RouteList from "@/components/RouteList/RouteList";
 import SavedRoutesList from "@/components/SavedRoutesList/SavedRoutesList";
+import TeamPanel from "@/components/TeamPanel/TeamPanel";
 import { createDepotStop, DEPOT_END_ID, DEPOT_START_ID } from "@/lib/depot";
 import { resolveRouteStop, type RouteStopRef } from "@/lib/routeStop";
 import type { DeliveryLocation } from "@/types/location";
@@ -42,6 +44,7 @@ export default function Home() {
   } = useRoutePlan();
   const { routes, saveRoute, deleteRoute } = useSavedRoutes();
   const { optimize, isOptimizing, error: optimizeError } = useRouteOptimizer();
+  const { user, logout } = useCurrentUser();
 
   const [activePanel, setActivePanel] = useState<PanelKey>("tour");
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -133,6 +136,9 @@ export default function Home() {
         onPanelChange={handlePanelChange}
         isOpen={isSidebarOpen}
         onToggleOpen={() => setIsSidebarOpen((open) => !open)}
+        userName={user?.name}
+        isAdmin={user?.role === "admin"}
+        onLogout={logout}
       >
         {activePanel === "tour" && (
           <>
@@ -233,6 +239,8 @@ export default function Home() {
             onDelete={deleteRoute}
           />
         )}
+
+        {activePanel === "team" && user?.role === "admin" && <TeamPanel />}
       </AppSidebar>
 
       <div className={styles.mapArea}>

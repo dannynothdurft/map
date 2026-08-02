@@ -3,8 +3,12 @@ import type { ObjectId } from "mongodb";
 import { getDb } from "@/lib/mongodb";
 import type { DeliveryLocation } from "@/types/location";
 import { toAddress, type AddressDocument } from "@/lib/addressDocument";
+import { requireUser } from "@/lib/session";
 
 export async function GET() {
+  const user = await requireUser();
+  if (!user) return NextResponse.json({ error: "Nicht angemeldet." }, { status: 401 });
+
   const db = await getDb();
   const docs = await db
     .collection<AddressDocument>("addresses")
@@ -16,6 +20,9 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  const user = await requireUser();
+  if (!user) return NextResponse.json({ error: "Nicht angemeldet." }, { status: 401 });
+
   const body = await request.json();
   const { label, address, lat, lng } = body as Partial<DeliveryLocation>;
 
@@ -32,6 +39,7 @@ export async function POST(request: NextRequest) {
     lat,
     lng,
     createdAt: Date.now(),
+    createdBy: user,
   };
 
   const db = await getDb();

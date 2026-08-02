@@ -58,6 +58,9 @@ export default function SavedRoutesList({
             <div className={styles.details}>
               <span className={styles.name}>{route.name}</span>
               <span className={styles.stops}>{describeStops(route.stops)}</span>
+              {route.createdBy && (
+                <span className={styles.creator}>von {route.createdBy.name}</span>
+              )}
             </div>
 
             <div className={styles.actions}>

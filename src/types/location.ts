@@ -5,4 +5,5 @@ export interface DeliveryLocation {
   lat: number;
   lng: number;
   createdAt: number;
+  createdBy?: { id: string; name: string };
 }
