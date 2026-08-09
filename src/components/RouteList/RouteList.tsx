@@ -207,6 +207,9 @@ export default function RouteList({
                 <span className={styles.label}>{location.label}</span>
               )}
               <span className={styles.address}>{location.address}</span>
+              {location.openingHours && (
+                <span className={styles.openingHours}>{location.openingHours}</span>
+              )}
             </button>
 
             <div className={styles.actions}>

@@ -19,7 +19,7 @@ export async function PATCH(
   }
 
   const body = await request.json();
-  const { label, address, lat, lng } = body as Partial<DeliveryLocation>;
+  const { label, address, openingHours, lat, lng } = body as Partial<DeliveryLocation>;
 
   if (!address || typeof lat !== "number" || typeof lng !== "number") {
     return NextResponse.json(
@@ -33,7 +33,7 @@ export async function PATCH(
     .collection<AddressDocument>("addresses")
     .findOneAndUpdate(
       { _id: new ObjectId(id) },
-      { $set: { label: label || undefined, address, lat, lng } },
+      { $set: { label: label || undefined, address, openingHours: openingHours || undefined, lat, lng } },
       { returnDocument: "after" },
     );
 

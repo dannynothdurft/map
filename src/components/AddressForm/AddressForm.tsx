@@ -23,6 +23,7 @@ export default function AddressForm({
   const [houseNumber, setHouseNumber] = useState("");
   const [postalCode, setPostalCode] = useState("");
   const [city, setCity] = useState("");
+  const [openingHours, setOpeningHours] = useState("");
   const { geocode, isLoading, error, setError } = useGeocode();
 
   function resetAndClose() {
@@ -31,6 +32,7 @@ export default function AddressForm({
     setHouseNumber("");
     setPostalCode("");
     setCity("");
+    setOpeningHours("");
     setError(null);
     setIsOpen(false);
   }
@@ -63,6 +65,7 @@ export default function AddressForm({
           : `${Date.now()}-${Math.random()}`,
       address: formattedAddress,
       label: name.trim() || undefined,
+      openingHours: openingHours.trim() || undefined,
       lat: result.lat,
       lng: result.lng,
       createdAt: Date.now(),
@@ -140,6 +143,17 @@ export default function AddressForm({
                 />
               </label>
             </div>
+
+            <label className={styles.field}>
+              <span>Öffnungszeiten (optional)</span>
+              <input
+                type="text"
+                value={openingHours}
+                onChange={(event) => setOpeningHours(event.target.value)}
+                placeholder="z. B. Mo–Fr 08:00–18:00, Sa 09:00–13:00"
+                disabled={isLoading}
+              />
+            </label>
 
             <button type="submit" className={styles.submit} disabled={isLoading}>
               {isLoading ? "Suche…" : "Speichern"}

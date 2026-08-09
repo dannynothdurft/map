@@ -39,6 +39,7 @@ export function useRouteOptimizer() {
               id: location.id,
               label: location.label,
               address: location.address,
+              openingHours: location.openingHours,
               lat: location.lat,
               lng: location.lng,
             })),

@@ -198,6 +198,12 @@ export default function MapView({ locations, focusLocation }: MapViewProps) {
                   <strong>{title}</strong>
                   <br />
                   {location.address}
+                  {location.openingHours && (
+                    <>
+                      <br />
+                      {location.openingHours}
+                    </>
+                  )}
                   <NavigationLink lat={location.lat} lng={location.lng} />
                 </Popup>
               </Marker>
@@ -216,6 +222,12 @@ export default function MapView({ locations, focusLocation }: MapViewProps) {
                 <strong>{focusLocation.label || "Adresse"}</strong>
                 <br />
                 {focusLocation.address}
+                {focusLocation.openingHours && (
+                  <>
+                    <br />
+                    {focusLocation.openingHours}
+                  </>
+                )}
                 <NavigationLink lat={focusLocation.lat} lng={focusLocation.lng} />
               </Popup>
             </Marker>

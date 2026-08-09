@@ -130,6 +130,12 @@
   white-space: nowrap;
 }
 
+.openingHours {
+  font-size: 0.7rem;
+  color: var(--foreground-muted);
+  opacity: 0.85;
+}
+
 .actions {
   display: flex;
   gap: 0.25rem;

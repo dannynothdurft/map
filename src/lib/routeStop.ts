@@ -9,6 +9,7 @@ export interface AdHocStop {
   isAdHoc: true;
   label?: string;
   address: string;
+  openingHours?: string;
   lat: number;
   lng: number;
 }
@@ -31,6 +32,7 @@ export function resolveRouteStop(
     id: ref.id,
     label: ref.label,
     address: ref.address,
+    openingHours: ref.openingHours,
     lat: ref.lat,
     lng: ref.lng,
     createdAt: 0,

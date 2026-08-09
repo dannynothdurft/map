@@ -88,6 +88,7 @@ export default function Home() {
     addAdHocStop({
       label: location.label,
       address: location.address,
+      openingHours: location.openingHours,
       lat: location.lat,
       lng: location.lng,
     });

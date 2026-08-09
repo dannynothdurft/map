@@ -49,7 +49,7 @@ export function useRoutePlan() {
   );
 
   const addAdHocStop = useCallback(
-    (stop: { label?: string; address: string; lat: number; lng: number }) => {
+    (stop: { label?: string; address: string; openingHours?: string; lat: number; lng: number }) => {
       mutate((prev) => [...prev, { id: generateId(), isAdHoc: true, ...stop }]);
     },
     [mutate],

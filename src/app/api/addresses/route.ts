@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
   if (!user) return NextResponse.json({ error: "Nicht angemeldet." }, { status: 401 });
 
   const body = await request.json();
-  const { label, address, lat, lng } = body as Partial<DeliveryLocation>;
+  const { label, address, openingHours, lat, lng } = body as Partial<DeliveryLocation>;
 
   if (!address || typeof lat !== "number" || typeof lng !== "number") {
     return NextResponse.json(
@@ -36,6 +36,7 @@ export async function POST(request: NextRequest) {
   const doc: AddressDocument = {
     label: label || undefined,
     address,
+    openingHours: openingHours || undefined,
     lat,
     lng,
     createdAt: Date.now(),

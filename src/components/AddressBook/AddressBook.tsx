@@ -8,6 +8,7 @@ import styles from "./AddressBook.module.scss";
 interface UpdateFields {
   label?: string;
   address: string;
+  openingHours?: string;
   lat: number;
   lng: number;
 }
@@ -107,6 +108,9 @@ export default function AddressBook({
             >
               {address.label && <span className={styles.label}>{address.label}</span>}
               <span className={styles.address}>{address.address}</span>
+              {address.openingHours && (
+                <span className={styles.openingHours}>{address.openingHours}</span>
+              )}
               {address.createdBy && (
                 <span className={styles.creator}>von {address.createdBy.name}</span>
               )}
@@ -150,6 +154,7 @@ interface AddressEditItemProps {
 function AddressEditItem({ address, onCancel, onSave, onDelete }: AddressEditItemProps) {
   const [addressText, setAddressText] = useState(address.address);
   const [label, setLabel] = useState(address.label ?? "");
+  const [openingHours, setOpeningHours] = useState(address.openingHours ?? "");
   const { geocode, isLoading, error } = useGeocode();
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -158,18 +163,31 @@ function AddressEditItem({ address, onCancel, onSave, onDelete }: AddressEditIte
     if (!trimmedAddress) return;
 
     const trimmedLabel = label.trim() || undefined;
+    const trimmedOpeningHours = openingHours.trim() || undefined;
 
     // Only re-geocode when the address text actually changed - saves an
     // unnecessary Nominatim lookup when someone is just fixing the label.
     if (trimmedAddress === address.address) {
-      onSave({ label: trimmedLabel, address: address.address, lat: address.lat, lng: address.lng });
+      onSave({
+        label: trimmedLabel,
+        address: address.address,
+        openingHours: trimmedOpeningHours,
+        lat: address.lat,
+        lng: address.lng,
+      });
       return;
     }
 
     const result = await geocode(trimmedAddress);
     if (!result) return;
 
-    onSave({ label: trimmedLabel, address: result.displayName, lat: result.lat, lng: result.lng });
+    onSave({
+      label: trimmedLabel,
+      address: result.displayName,
+      openingHours: trimmedOpeningHours,
+      lat: result.lat,
+      lng: result.lng,
+    });
   }
 
   return (
@@ -187,6 +205,13 @@ function AddressEditItem({ address, onCancel, onSave, onDelete }: AddressEditIte
           value={label}
           onChange={(event) => setLabel(event.target.value)}
           placeholder="Bezeichnung (optional)"
+          disabled={isLoading}
+        />
+        <input
+          type="text"
+          value={openingHours}
+          onChange={(event) => setOpeningHours(event.target.value)}
+          placeholder="Öffnungszeiten (optional)"
           disabled={isLoading}
         />
         <div className={styles.editActions}>

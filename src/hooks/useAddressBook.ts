@@ -37,7 +37,10 @@ export function useAddressBook() {
   const updateAddress = useCallback(
     async (
       id: string,
-      fields: Pick<DeliveryLocation, "address" | "lat" | "lng"> & { label?: string },
+      fields: Pick<DeliveryLocation, "address" | "lat" | "lng"> & {
+        label?: string;
+        openingHours?: string;
+      },
     ) => {
       const response = await fetch(`/api/addresses/${id}`, {
         method: "PATCH",
