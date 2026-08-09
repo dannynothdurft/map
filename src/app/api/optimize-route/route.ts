@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
 
   const message = await client.messages.create({
     model: "claude-opus-5",
-    max_tokens: 4096,
+    max_tokens: 8192,
     thinking: { type: "adaptive" },
     output_config: { effort: "high" },
     system:
@@ -100,10 +100,14 @@ export async function POST(request: NextRequest) {
   );
 
   if (!toolUse) {
-    return NextResponse.json(
-      { error: "Die KI konnte keine Reihenfolge bestimmen." },
-      { status: 502 },
-    );
+    // stop_reason "max_tokens" means the model ran out of budget (usually
+    // while thinking) before it could call the tool - surface that distinctly
+    // so it's not confused with the model genuinely refusing/failing.
+    const error =
+      message.stop_reason === "max_tokens"
+        ? "Die KI hat das Token-Limit erreicht, bevor sie eine Reihenfolge festlegen konnte. Bitte erneut versuchen."
+        : "Die KI konnte keine Reihenfolge bestimmen.";
+    return NextResponse.json({ error }, { status: 502 });
   }
 
   const input = toolUse.input as { order?: string[] };
